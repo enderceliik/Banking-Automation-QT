@@ -85,99 +85,75 @@ void database::initial_database_definition()
     }
 
 }
-bool database::verification(int userID, QString password)
+QString database::verification(int userID)
 {
     if (!database.isOpen()) {
         database.open();
     }
     QSqlQuery query(database);
     queryString = QString("SELECT password FROM users where userID = '%1'").arg(userID);
+    query.prepare(queryString);
     query.exec();
     query.next();
-    QSettings settings("banking_automation.ini", QSettings::IniFormat);
-    QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-    if(password == query.value(0).toString())
-    {
-
-        QString logMessage = QString::number(userID);
-
-        settings.beginGroup("success logins");
-        settings.setValue(timestamp, logMessage);
-        settings.endGroup();
-        return true;
-    } else
-    {
-       QSettings settings("banking_automation.ini", QSettings::IniFormat);
-        QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-        QString logMessage = QString::number(userID);
-
-        settings.beginGroup("failed logins");
-        settings.setValue(timestamp, logMessage);
-        settings.endGroup();
-        return false;
-    }
+    return query.value(0).toString();
 }
-QMap<QString, QVariant> database::interface_info_fetch(int userID)
+QSqlQuery database::interface_info_fetch(int userID)
 {
-    QMap<QString, QVariant> interfaceInfoMap;
-    QSqlQuery query;
-    query.prepare("SELECT * FROM users WHERE userID = :userID");
-    query.bindValue(":userID", userID);
+    if (!database.isOpen()) {
+        database.open();
+    }
+    QSqlQuery query(database);
+    queryString = QString("SELECT * FROM users WHERE userID = '%1'").arg(userID);
+    query.prepare(queryString);
     query.exec();
     query.next();
-    interfaceInfoMap.insert("userID",query.value(0).toInt());
-    interfaceInfoMap.insert("password",query.value(1).toString());
-    interfaceInfoMap.insert("name",query.value(2).toString());
-    interfaceInfoMap.insert("surname",query.value(3).toString());
-    interfaceInfoMap.insert("balance",query.value(4).toDouble());
-    interfaceInfoMap.insert("Iban",query.value(5).toString());
-    interfaceInfoMap.insert("userType",query.value(6).toString());
-    return interfaceInfoMap;
+    return query;
 }
 
 void database::process(QMap<QString,QVariant> interfaceMap)
 {
-    QSqlQuery query;
-    query.prepare("UPDATE users SET balance = balance - :amountTransferred where userID = :senderID;");
-    query.bindValue(":amountTransferred", interfaceMap.value("amountTransferred").toDouble());
-    query.bindValue(":senderID", interfaceMap.value("userID").toString());
+    QSqlQuery query(database);
+    queryString = QString("UPDATE users SET balance = balance - '%1' where userID = '%2';").arg(interfaceMap.value("amountTransferred").toDouble(), interfaceMap.value("userID").toString());
+    query.prepare(queryString);
     if(query.exec())
     {
         qDebug() << "users table insert succesfully!";
     }
-    query.prepare("UPDATE users SET balance = balance + :amountTransferred where userID = :receivingPartyID;");
-    query.bindValue(":amountTransferred", interfaceMap.value("amountTransferred").toDouble());
-    query.bindValue(":receivingPartyID", interfaceMap.value("receivingPartyID").toString());
+    queryString = QString("UPDATE users SET balance = balance + '%1' where userID = '%2';").arg(interfaceMap.value("amountTransferred").toDouble(), interfaceMap.value("receivingPartyID").toString());
+    query.prepare(queryString);
     if(query.exec())
     {
         qDebug() << "users table insert succesfully!";
     }
 
-
-    query.prepare("INSERT INTO transactions (amountTransferred, senderIban, receivingPartyIban) values(:amountTransferred, :senderIban, :receivingPartyIban);");
-    query.bindValue(":amountTransferred", interfaceMap.value("amountTransferred").toDouble());
-    query.bindValue(":senderIban", interfaceMap.value("Iban").toString());
-    query.bindValue(":receivingPartyIban", interfaceMap.value("receivingPartyIban").toString());
+    queryString = QString("INSERT INTO transactions (amountTransferred, senderIban, receivingPartyIban) values('%1', '%2', '%3');").arg(interfaceMap.value("amountTransferred").toDouble(), interfaceMap.value("Iban").toString(), interfaceMap.value("receivingPartyIban").toString());
+    query.prepare(queryString);
     if(query.exec())
     {
         qDebug() << "users table insert succesfully!";
     }
-    double totalyBalance = interfaceMap.value("balance").toDouble() - interfaceMap.value("amountTransferred").toDouble();
-    QSettings settings("banking_automation.ini", QSettings::IniFormat);
-    QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-    QString logMessage = interfaceMap.value("amountTransferred").toString() + " " + interfaceMap.value("Iban").toString() + " " + interfaceMap.value("receivingPartyIban").toString() + " " + QString::number(totalyBalance);
-
-    settings.beginGroup("money transfers");
-    settings.setValue(timestamp, logMessage);
-    settings.endGroup();
-    int i=5;
-    QString str=QString("%1").arg(i);
 }
 
 QSqlQueryModel* database::database_query(QString parameter)
 {
-    QString query = QString("SELECT * FROM transactions where senderIban = '%1' or receivingPartyIban = '%2'").arg(parameter, parameter);
+    if (!database.isOpen()) {
+        database.open();
+    }
+    query = QString("SELECT * FROM transactions WHERE senderIban = '%1' OR receivingPartyIban = '%2'").arg(parameter, parameter);
     QSqlQueryModel *model  = new QSqlQueryModel();
     model->setQuery(query);
     return model;
+}
+
+QSqlQuery database::check_iban(QString Iban)
+{
+    if (!database.isOpen()) {
+        database.open();
+    }
+    QSqlQuery query(database);
+    queryString = QString("SELECT userID, name, surname FROM users WHERE Iban= '%1'").arg(Iban);
+    query.prepare(queryString);
+    query.exec();
+    query.next();
+    return query;
 }

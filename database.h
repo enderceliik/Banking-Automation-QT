@@ -13,10 +13,12 @@ public:
     ~database();
     QString queryString;
     void initial_database_definition();
-    QMap<QString, QVariant> interface_info_fetch(int userID);
-    bool verification(int userID, QString password);
+    QSqlQuery interface_info_fetch(int userID);
+    QString verification(int userID);
     void process(QMap<QString, QVariant>);
     QSqlQueryModel* database_query(QString parameter);
+    QSqlQuery check_iban(QString Iban);
+
 
 private:
     QSqlDatabase database;

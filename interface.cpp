@@ -6,7 +6,7 @@
 InterFace::InterFace(const int userID, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::InterFace)
-{
+{    
     this->userID = userID;
     ui->setupUi(this);
     ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -20,11 +20,22 @@ InterFace::~InterFace()
 
 void InterFace::load_interface(int userID)
 {
-    interfaceInfoMap = database().interface_info_fetch(userID);
+    database db;
+    QSqlQuery query = db.interface_info_fetch(userID);
+
+    interfaceInfoMap.insert("userID",query.value(0).toInt());
+    interfaceInfoMap.insert("password",query.value(1).toString());
+    interfaceInfoMap.insert("name",query.value(2).toString());
+    interfaceInfoMap.insert("surname",query.value(3).toString());
+    interfaceInfoMap.insert("balance",query.value(4).toDouble());
+    interfaceInfoMap.insert("Iban",query.value(5).toString());
+    interfaceInfoMap.insert("userType",query.value(6).toString());
+
     ui->balance_label->setText(interfaceInfoMap.value("balance").toString());
     ui->Iban_label->setText(interfaceInfoMap.value("Iban").toString());
     ui->name_surname_label->setText(interfaceInfoMap.value("name").toString()+" "+interfaceInfoMap.value("surname").toString());
-    QSqlQueryModel *model = database().database_query(interfaceInfoMap.value("Iban").toString());
+
+    QSqlQueryModel *model = db.database_query(interfaceInfoMap.value("Iban").toString());
     ui->tableView->setModel(model);
     ui->tableView->show();
     ui->tableView->update();
@@ -39,6 +50,14 @@ void InterFace::on_send_pushButton_clicked()
     if(check_iban() && check_value())
     {
         database().process(interfaceInfoMap);
+        double totalyBalance = interfaceMap.value("balance").toDouble() - interfaceMap.value("amountTransferred").toDouble();
+
+        QSettings settings("banking_automation.ini", QSettings::IniFormat);
+        QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+        QString logMessage = interfaceMap.value("amountTransferred").toString() + " " + interfaceMap.value("Iban").toString() + " " + interfaceMap.value("receivingPartyIban").toString() + " " + QString::number(totalyBalance);
+        settings.beginGroup("money transfers");
+        settings.setValue(timestamp, logMessage);
+        settings.endGroup();
 
     }
     ui->Iban_lineEdit->setEnabled(true);
@@ -53,7 +72,7 @@ bool InterFace::check_value()
     double doubleValue = ui->amount_lineEdit->text().toDouble(&succes);
     if(succes)
     {
-        if(doubleValue > interfaceInfoMap.value("balance").toDouble())
+        if(doubleValue > interfaceInfoMap.value("balance").toDouble() && doubleValue == 0 && doubleValue < 0)
         {
             return false;
         } else
@@ -61,48 +80,32 @@ bool InterFace::check_value()
             return true;
         }
     }
-    else if(ui->amount_lineEdit->text().isEmpty() && doubleValue == 0 && doubleValue < 0)
-    {
-        return false;
-    }
     else
     {
         return false;
     }
-
 }
 
 bool InterFace::check_iban()
 {
-    QSqlQuery query;
-    query.prepare("SELECT userID, name, surname FROM users where Iban= :Iban");
-    query.bindValue(":Iban",ui->Iban_lineEdit->text());
-    query.exec();
-    query.next();
-    QString name = query.value(1).toString();
-    QString surname = query.value(2).toString();
-    if(!name.isEmpty() && !surname.isEmpty())
+    database db;
+    QSqlQuery query = db.check_info(ui->Iban_lineEdit->text());
+    if(!query.value(1).toString().isEmpty() && query.value(2).toString().isEmpty())
     {
         interfaceInfoMap.insert("receivingPartyID", query.value(0).toInt());
         interfaceInfoMap.insert("receivingName", query.value(1).toString());
         interfaceInfoMap.insert("receivingSurname", query.value(2).toString());
         return true;
     }
-    else {
+    else
+    {
         return false;
     }
-
 }
 
 void InterFace::on_Iban_lineEdit_editingFinished()
 {
-    if(ui->Iban_lineEdit->text().isEmpty())
-    {
-        ui->receiver_name_label->clear();
-        ui->send_pushButton->setEnabled(false);
-        ui->amount_lineEdit->setEnabled(false);
-    }
-    else if(ui->Iban_lineEdit->text() == interfaceInfoMap.value("Iban").toString())
+    if(ui->Iban_lineEdit->text().isEmpty() || ui->Iban_lineEdit->text() == interfaceInfoMap.value("Iban").toString())
     {
         ui->receiver_name_label->clear();
         ui->send_pushButton->setEnabled(false);
