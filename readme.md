@@ -5,7 +5,6 @@
 The aim of the project is to simulate a banking application where users can send money using their IBAN information through a local database powered by SQLite. Additionally, these transfer, deposit, and withdrawal etc. transactions are recorded in the .init file.
 
 > ## Screenshots:
-> You can follow people:
 > | <img src="./readme_assets/login_interface.png" alt="GIF Example" width="321" height="501">  | <img src="./readme_assets/process_page.png" alt="GIF Example" width="545" height="501">  |
 > | -- | -- |
 > 
