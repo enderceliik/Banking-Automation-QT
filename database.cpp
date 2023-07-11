@@ -1,23 +1,26 @@
 #include "database.h"
-
+QSqlDatabase database::sqliteDatabase;
 database::database() {
-    database = QSqlDatabase::addDatabase("QSQLITE");
-    database.setDatabaseName("mydatabase.db");
+    qDebug() << "constructer çalıştırma denemesi";
+    if (!sqliteDatabase.isValid()) {
+        sqliteDatabase = QSqlDatabase::addDatabase("QSQLITE");
+        sqliteDatabase.setDatabaseName("banking_automation_sqlite_database.db");
 
-    if (!database.open()) {
-        qDebug() << "Veritabanı açılamadı.";
+        if (!sqliteDatabase.open()) {
+            qDebug() << "Veritabanı açılamadı.";
+        }
     }
 }
 database::~database() {
-    database.close();
+    qDebug() << "Deconstructor çalışıyor.";
+    sqliteDatabase.close();
 }
 void database::initial_database_definition()
 {
-    if (!database.open()) {
-        return;
+    QSqlQuery query(sqliteDatabase);
+    if (!sqliteDatabase.open()) {
+        sqliteDatabase.open();
     }
-    QSqlQuery query(database);
-
     query.prepare("CREATE TABLE users ("
                   "userID INTEGER PRIMARY KEY AUTOINCREMENT,"
                   "password VARCHAR(16),"
@@ -61,6 +64,7 @@ void database::initial_database_definition()
                       .arg(1600.0)
                       .arg("TR 296143")
                       .arg(0);
+    query.prepare(queryString);
     if(query.exec())
     {
         qDebug() << "users table INSERT succesfully!";
@@ -83,27 +87,48 @@ void database::initial_database_definition()
     {
         qDebug() << "users table INSERT 2 succesfully!";
     }
-
+    queryString = QString("INSERT INTO users (password, "
+                          "name, "
+                          "surname, "
+                          "balance, "
+                          "Iban, "
+                          "userType) "
+                          "values ('%1', '%2', '%3', %4, '%5', %6);")
+                      .arg("654")
+                      .arg("Ahmet")
+                      .arg("Alkaç")
+                      .arg(8500.75)
+                      .arg("TR 262629")
+                      .arg(0);
+    query.prepare(queryString);
+    if(query.exec())
+    {
+        qDebug() << "users table INSERT 2 succesfully!";
+    }
 }
+
 QString database::verification(int userID)
 {
-    if (!database.isOpen()) {
-        database.open();
+    if (!sqliteDatabase.isOpen()) {
+        sqliteDatabase.open();
     }
-    QSqlQuery query(database);
-    queryString = QString("SELECT password FROM users where userID = '%1'").arg(userID);
+
+    QSqlQuery query(sqliteDatabase);
+    queryString = QString("SELECT password FROM users where userID = %1").arg(userID);
     query.prepare(queryString);
     query.exec();
     query.next();
     return query.value(0).toString();
 }
+
 QSqlQuery database::interface_info_fetch(int userID)
 {
-    if (!database.isOpen()) {
-        database.open();
+    if (!sqliteDatabase.isOpen()) {
+        sqliteDatabase.open();
     }
-    QSqlQuery query(database);
-    queryString = QString("SELECT * FROM users WHERE userID = '%1'").arg(userID);
+
+    QSqlQuery query(sqliteDatabase);
+    queryString = QString("SELECT * FROM users WHERE userID = %1").arg(userID);
     query.prepare(queryString);
     query.exec();
     query.next();
@@ -112,21 +137,26 @@ QSqlQuery database::interface_info_fetch(int userID)
 
 void database::process(QMap<QString,QVariant> interfaceMap)
 {
-    QSqlQuery query(database);
-    queryString = QString("UPDATE users SET balance = balance - '%1' where userID = '%2';").arg(interfaceMap.value("amountTransferred").toDouble(), interfaceMap.value("userID").toString());
+    if (!sqliteDatabase.isOpen()) {
+        sqliteDatabase.open();
+    }
+    QSqlQuery query(sqliteDatabase);
+    queryString = QString("UPDATE users SET balance = balance - %1 where userID = %2;").arg(interfaceMap.value("amountTransferred").toDouble()).arg(interfaceMap.value("userID").toInt());
     query.prepare(queryString);
     if(query.exec())
     {
         qDebug() << "users table insert succesfully!";
     }
-    queryString = QString("UPDATE users SET balance = balance + '%1' where userID = '%2';").arg(interfaceMap.value("amountTransferred").toDouble(), interfaceMap.value("receivingPartyID").toString());
+    queryString = QString("UPDATE users SET balance = balance + %1 where userID = %2;").arg(interfaceMap.value("amountTransferred").toDouble()).arg(interfaceMap.value("receivingPartyID").toInt());
     query.prepare(queryString);
     if(query.exec())
     {
         qDebug() << "users table insert succesfully!";
     }
 
-    queryString = QString("INSERT INTO transactions (amountTransferred, senderIban, receivingPartyIban) values('%1', '%2', '%3');").arg(interfaceMap.value("amountTransferred").toDouble(), interfaceMap.value("Iban").toString(), interfaceMap.value("receivingPartyIban").toString());
+    queryString = QString("INSERT INTO transactions (amountTransferred, senderIban, receivingPartyIban) values(%1, '%2', '%3');").arg(interfaceMap.value("amountTransferred").toDouble())
+                      .arg(interfaceMap.value("Iban").toString())
+                      .arg(interfaceMap.value("receivingPartyIban").toString());
     query.prepare(queryString);
     if(query.exec())
     {
@@ -136,21 +166,21 @@ void database::process(QMap<QString,QVariant> interfaceMap)
 
 QSqlQueryModel* database::database_query(QString parameter)
 {
-    if (!database.isOpen()) {
-        database.open();
+    if (!sqliteDatabase.isOpen()) {
+        sqliteDatabase.open();
     }
-    query = QString("SELECT * FROM transactions WHERE senderIban = '%1' OR receivingPartyIban = '%2'").arg(parameter, parameter);
+    queryString = QString("SELECT * FROM transactions WHERE senderIban = '%1' OR receivingPartyIban = '%2'").arg(parameter, parameter);
     QSqlQueryModel *model  = new QSqlQueryModel();
-    model->setQuery(query);
+    model->setQuery(queryString);
     return model;
 }
 
 QSqlQuery database::check_iban(QString Iban)
 {
-    if (!database.isOpen()) {
-        database.open();
+    if (!sqliteDatabase.isOpen()) {
+        sqliteDatabase.open();
     }
-    QSqlQuery query(database);
+    QSqlQuery query(sqliteDatabase);
     queryString = QString("SELECT userID, name, surname FROM users WHERE Iban= '%1'").arg(Iban);
     query.prepare(queryString);
     query.exec();

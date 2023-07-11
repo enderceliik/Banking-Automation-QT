@@ -22,11 +22,8 @@ private slots:
     void load_interface(int userID);
     bool check_value();
     bool check_iban();
-
     void on_amount_lineEdit_editingFinished();
-
     void on_Iban_lineEdit_editingFinished();
-
     void on_exit_pushButton_clicked();
 
 private:

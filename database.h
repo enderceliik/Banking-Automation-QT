@@ -13,15 +13,13 @@ public:
     ~database();
     QString queryString;
     void initial_database_definition();
-    QSqlQuery interface_info_fetch(int userID);
-    QString verification(int userID);
     void process(QMap<QString, QVariant>);
-    QSqlQueryModel* database_query(QString parameter);
+    QString verification(int userID);
+    QSqlQuery interface_info_fetch(int userID);
     QSqlQuery check_iban(QString Iban);
-
-
+    QSqlQueryModel* database_query(QString parameter);
 private:
-    QSqlDatabase database;
+    static QSqlDatabase sqliteDatabase;
 };
 
 #endif // DATABASE_H
