@@ -1,18 +1,19 @@
+// https://github.com/Enderceliik
+// Ender CELIK
+
 #include "database.h"
 QSqlDatabase database::sqliteDatabase;
 database::database() {
-    qDebug() << "constructer çalıştırma denemesi";
     if (!sqliteDatabase.isValid()) {
         sqliteDatabase = QSqlDatabase::addDatabase("QSQLITE");
         sqliteDatabase.setDatabaseName("banking_automation_sqlite_database.db");
 
         if (!sqliteDatabase.open()) {
-            qDebug() << "Veritabanı açılamadı.";
+            qDebug() << "The database could not be opened.";
         }
     }
 }
 database::~database() {
-    qDebug() << "Deconstructor çalışıyor.";
     sqliteDatabase.close();
 }
 void database::initial_database_definition()
@@ -61,8 +62,8 @@ void database::initial_database_definition()
                       .arg("159*")
                       .arg("Ender")
                       .arg("Çelik")
-                      .arg(1600.0)
-                      .arg("TR 296143")
+                      .arg(19500)
+                      .arg("TR 29296161")
                       .arg(0);
     query.prepare(queryString);
     if(query.exec())
@@ -79,8 +80,8 @@ void database::initial_database_definition()
                               .arg("159-")
                               .arg("Lokman")
                               .arg("Pehlivan")
-                              .arg(2600.75)
-                              .arg("TR 424242")
+                              .arg(42000)
+                              .arg("TR 42424242")
                               .arg(0);
     query.prepare(queryString);
     if(query.exec())
@@ -97,13 +98,13 @@ void database::initial_database_definition()
                       .arg("654")
                       .arg("Ahmet")
                       .arg("Alkaç")
-                      .arg(8500.75)
-                      .arg("TR 262629")
+                      .arg(22000)
+                      .arg("TR 26262929")
                       .arg(0);
     query.prepare(queryString);
     if(query.exec())
     {
-        qDebug() << "users table INSERT 2 succesfully!";
+        qDebug() << "users table INSERT 3 succesfully!";
     }
 }
 
@@ -169,7 +170,7 @@ QSqlQueryModel* database::database_query(QString parameter)
     if (!sqliteDatabase.isOpen()) {
         sqliteDatabase.open();
     }
-    queryString = QString("SELECT * FROM transactions WHERE senderIban = '%1' OR receivingPartyIban = '%2'").arg(parameter, parameter);
+    queryString = QString("SELECT transactionDate, amountTransferred, senderIban, receivingPartyIban FROM transactions WHERE senderIban = '%1' OR receivingPartyIban = '%2'").arg(parameter, parameter);
     QSqlQueryModel *model  = new QSqlQueryModel();
     model->setQuery(queryString);
     return model;

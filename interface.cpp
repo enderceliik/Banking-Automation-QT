@@ -1,3 +1,6 @@
+// https://github.com/Enderceliik
+// Ender CELIK
+
 #include "interface.h"
 #include "ui_interface.h"
 #include "database.h"
@@ -32,7 +35,7 @@ void InterFace::load_interface(int userID)
     interfaceInfoMap.insert("Iban",query.value(5).toString());
     interfaceInfoMap.insert("userType",query.value(6).toString());
 
-    ui->balance_label->setText(interfaceInfoMap.value("balance").toString());
+    ui->balance_label->setText(interfaceInfoMap.value("balance").toString() + " ₺");
     ui->Iban_label->setText(interfaceInfoMap.value("Iban").toString());
     ui->name_surname_label->setText(interfaceInfoMap.value("name").toString()+" "+interfaceInfoMap.value("surname").toString());
 

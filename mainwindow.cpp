@@ -1,3 +1,6 @@
+// https://github.com/Enderceliik
+// Ender CELIK
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "database.h"
@@ -15,14 +18,11 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-
 void MainWindow::on_login_button_clicked()
 {
     ui->customer_identity_lineEdit->setEnabled(false);
     ui->password_lineEdit->setEnabled(false);
     ui->login_button->setEnabled(false);
-
-    ui->statusbar->showMessage("Checking...");
 
     QMessageBox msgBox;
     msgBox.setWindowTitle("Warning");
@@ -34,7 +34,6 @@ void MainWindow::on_login_button_clicked()
     if(ui->customer_identity_lineEdit->text().isEmpty() || ui->password_lineEdit->text().isEmpty())
     {
         msgBox.exec();
-        ui->statusbar->clearMessage();
         ui->customer_identity_lineEdit->setEnabled(true);
         ui->password_lineEdit->setEnabled(true);
         ui->login_button->setEnabled(true);
@@ -59,7 +58,6 @@ void MainWindow::on_login_button_clicked()
     {
         settings.beginGroup("failed logins");
         msgBox.exec();
-        ui->statusbar->clearMessage();
         ui->customer_identity_lineEdit->setEnabled(true);
         ui->password_lineEdit->setEnabled(true);
         ui->login_button->setEnabled(true);
@@ -67,3 +65,13 @@ void MainWindow::on_login_button_clicked()
     settings.setValue(timestamp, logMessage);
     settings.endGroup();
 }
+
+
+void MainWindow::on_github_button_clicked()
+{
+    QString link = "https://github.com/enderceliik";
+    QDesktopServices::openUrl(QUrl(link));
+}
+
+
+

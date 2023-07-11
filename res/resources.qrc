@@ -1,0 +1,11 @@
+<RCC>
+  <qresource prefix="images">
+    <file>dark_blur_wallpaper.jpg</file>
+    <file>interface_background3.jpg</file>
+  </qresource>
+  <qresource prefix="icons">
+    <file>bank_icon.png</file>
+    <file>dollar_design.png</file>
+    <file>github.png</file>
+  </qresource>
+</RCC>

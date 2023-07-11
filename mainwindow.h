@@ -3,7 +3,8 @@
 
 #include <QMainWindow>
 #include <QMessageBox>
-
+#include <QDesktopServices>
+#include <QUrl>
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -18,6 +19,8 @@ public:
 
 private slots:
     void on_login_button_clicked();
+
+    void on_github_button_clicked();
 
 private:
     Ui::MainWindow *ui;

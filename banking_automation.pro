@@ -28,3 +28,14 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    res/res.qrc \
+    res/resources.qrc
+
+DISTFILES += \
+    res/bank_icon.png \
+    res/dark_blur_wallpaper.jpg \
+    res/dollar_design.png \
+    res/github.png \
+    res/interface_background3.jpg
